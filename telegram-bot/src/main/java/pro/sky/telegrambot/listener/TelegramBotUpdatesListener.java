@@ -25,8 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static jdk.internal.org.jline.utils.Colors.s;
-import static jdk.nashorn.internal.runtime.regexp.joni.encoding.CharacterType.W;
 
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
@@ -59,15 +57,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             } else {
                 create(updates);
             }
-            LocalDateTime localDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-            List<NotificationTask> notificationTasks = getNowNotificationTasks(localDateTime);
-            if (!notificationTasks.isEmpty()) {
+            List<NotificationTask> notificationTasks = getNowNotificationTasks();
                 for (NotificationTask notificationTask : notificationTasks) {
-                    SendMessage sendMessage = new SendMessage(notificationTask.getId_telegram(),
+                    SendMessage sendMessage = new SendMessage(notificationTask.getIdTelegram(),
                             notificationTask.getNotification());
                     SendResponse response = telegramBot.execute(sendMessage);
                 }
-            }
 
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
@@ -86,20 +81,21 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             String date = matcher.group(1);
             String item = matcher.group(3);
             notificationTask.setNotification(item);
-            notificationTask.setId_telegram(chatId);
-            notificationTask.setUser_name(update.message().from().username());
-            notificationTask.setNotification_send_time(LocalDateTime
+            notificationTask.setIdTelegram(chatId);
+            notificationTask.setUserName(update.message().from().username());
+            notificationTask.setNotificationSendTime(LocalDateTime
                     .parse(date, DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
         } else {
                 notificationTask.setNotification(null);
-                notificationTask.setId_telegram(0);
+                notificationTask.setIdTelegram(0);
             }
         });
         return notificationTaskRepository.save(notificationTask);
     }
     @Scheduled(cron = "0 0/1 * * * *")
-    public List<NotificationTask> getNowNotificationTasks(LocalDateTime localDateTime) {
-        return notificationTaskRepository.findNotificationTaskByNotification_send_time(localDateTime);
+    public List<NotificationTask> getNowNotificationTasks() {
+        LocalDateTime localDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        return notificationTaskRepository.findNotificationTaskByNotificationSendTime(localDateTime);
 
     }
 
