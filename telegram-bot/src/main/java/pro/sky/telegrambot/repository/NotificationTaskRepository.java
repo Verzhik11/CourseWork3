@@ -7,6 +7,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface NotificationTaskRepository extends JpaRepository<NotificationTask, Long> {
-    List<NotificationTask> findNotificationTaskByNotification_send_time(LocalDateTime localDateTime);
+    List<NotificationTask> findNotificationTaskByNotificationSendTime(LocalDateTime localDateTime);
 
 }
