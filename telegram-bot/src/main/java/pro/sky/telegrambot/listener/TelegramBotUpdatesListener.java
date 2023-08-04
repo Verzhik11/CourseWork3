@@ -50,19 +50,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("Processing update: {}", update);
             String txt = update.message().text();
             long chatId = update.message().chat().id();
-            String messageText = "Добро пожаловать в Телеграм-напоминалку для ДЗ";
+            String messageText = "Добро пожаловать в Телеграм-напоминалку для ДЗ. " +
+                    "Для создания задачи напишите дату и текст напоминания, а я сделаю так, чтобы Вы не забыли про него.";
             if (txt.equals("/start")) {
                 SendMessage message = new SendMessage(chatId, messageText);
                 SendResponse response = telegramBot.execute(message);
             } else {
                 create(updates);
             }
-            List<NotificationTask> notificationTasks = getNowNotificationTasks();
-                for (NotificationTask notificationTask : notificationTasks) {
-                    SendMessage sendMessage = new SendMessage(notificationTask.getIdTelegram(),
-                            notificationTask.getNotification());
-                    SendResponse response = telegramBot.execute(sendMessage);
-                }
 
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
@@ -93,9 +88,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return notificationTaskRepository.save(notificationTask);
     }
     @Scheduled(cron = "0 0/1 * * * *")
-    public List<NotificationTask> getNowNotificationTasks() {
+    public void getNowNotificationTasks() {
         LocalDateTime localDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-        return notificationTaskRepository.findNotificationTaskByNotificationSendTime(localDateTime);
+        List<NotificationTask> notificationTasks = notificationTaskRepository.findNotificationTaskByNotificationSendTime(localDateTime);
+        for (NotificationTask notificationTask : notificationTasks) {
+            SendMessage sendMessage = new SendMessage(notificationTask.getIdTelegram(),
+                    notificationTask.getNotification());
+            SendResponse response = telegramBot.execute(sendMessage);
+        }
 
     }
 
